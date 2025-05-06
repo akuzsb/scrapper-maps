@@ -9,3 +9,5 @@ services:
       - NODE_ENV=production
     command: npm start
     restart: unless-stopped
+    mem_limit: 512m
+    cpus: 1
