@@ -10,11 +10,17 @@ app.get('/api/getcoordenadas', async (req, res) => {
         return res.status(400).json({ error: true, message: 'Parámetro de búsqueda no proporcionado', data: null });
     }
 
-    const browser = await puppeteer.launch({
-        headless: "new",
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
-        defaultViewport: null
-    });
+    let browser;
+    try {
+        browser = await puppeteer.launch({
+            headless: "new",
+            args: ['--no-sandbox', '--disable-setuid-sandbox'],
+            defaultViewport: null
+        });
+    } catch (error) {
+        console.error('Error al iniciar el navegador:', error);
+        return res.status(500).json({ error: true, message: 'Error al iniciar el navegador', data: null });
+    }
 
     try {
         const page = await browser.newPage();
@@ -41,11 +47,22 @@ app.get('/api/getcoordenadas', async (req, res) => {
             res.status(404).json({ error: true, message: 'No se pudieron encontrar las coordenadas', data: null });
         }
     } catch (error) {
-		console.log('Error en el scraping:', error);
+        console.error('Error en el scraping:', error);
         res.status(500).json({ error: true, message: 'Error durante el scraping', data: null });
     } finally {
-        await browser.close();
+        if (browser) {
+            await browser.close();
+        }
     }
+});
+
+// Middleware para manejar rutas no definidas
+app.use((req, res) => {
+    res.status(404).json({
+        error: true,
+        message: 'Ruta no encontrada',
+        data: null
+    });
 });
 
 app.listen(PORT, () => {
